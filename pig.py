@@ -1,0 +1,164 @@
+import random
+import time
+import pyfiglet
+
+class pig_game:
+    def __init__(self):
+        self.goal = int(input("Enter Goal: "))
+        self.roll_limit = 4
+        self.withdraw = 5
+        self.score = {}
+        self.players = None
+        self.choice = None
+        self.retry = None
+
+    def player_count(self) -> int:
+        while True:
+            print('- - - - - - - - - - - - - - - - - - ')
+            self.players = input("Enter the number of players (2-4): ")
+            players = self.players
+            if players.isdigit():
+                players = int(players)
+                if not 2 <= players <= 4:
+                    print('There can only be 2 to 4 players')
+                else:
+                    break
+            else:
+                print('Please enter a digit between 2 and 4 which is the valid players required')
+        return int(players)
+
+    def roll(self) -> int:
+        # min_value = 1
+        # max_value = 6
+        # roll = random.randint(min_value, max_value)
+        roll = random.randrange(6) + 1
+
+        if roll == 1:
+            return False
+        return roll
+
+
+    def roll_setup(self) -> int:
+        roll_value = 0
+        roll_count = 0
+        while True:
+            roll_result = self.roll()
+            #if roll_count < 1: 
+            print('- - - - - - - - - - - - - - - - - - ')
+            self.choice = input("Roll or Hold (r or h) - ")
+            time.sleep(1)
+            if self.choice.lower() == 'roll' or self.choice.lower() == 'r':
+                if not roll_result:
+                    if roll_value >= 1:
+                        print('- - - - - - - - - - - - - - - - - - ')
+                        print(f"Unlucky... You got a 1. You've lost all ({roll_value}) points you got this round")
+                        print(f'{self.withdraw} Points has also been removed from your total point')
+                        return [0]
+                    else:
+                        print('- - - - - - - - - - - - - - - - - - ')
+                        print(f'{self.withdraw} Points has also been removed from your total point')
+                        print('Unlucky... You got a 1. Therefore you dont get any point this round')
+                        return [0]
+                #roll_count += 1
+                roll_value += roll_result
+                
+                print('- - - - - - - - - - - - - - - - - - ')
+                if roll_result == 6:
+                    print(f'You have just rolled a Freaking {roll_result}!, OPPORTUNITY: {roll_value}, do you want go with this or risk adding another roll?')
+                else:
+                    print(f'You have just rolled a {roll_result}, OPPORTUNITY: {roll_value}, do you want go with this or risk adding another roll?')
+                
+                print(f'You could lose {roll_value} points if you roll and get 1')
+
+                # else:
+                #     print('- - - - - - - - - - - - - - - - - - ')
+                #     print(f'You have just rolled a {roll_result}, OPPORTUNITY: {roll_value}, do you want go with this or risk adding another roll?')
+                #     print(f'You could lose {roll_value} points if you roll again and get 1')
+            elif self.choice.lower() == 'hold' or self.choice.lower() == 'h':
+                if isinstance(roll_value, int) and roll_value > 0:
+                    print('- - - - - - - - - - - - - - - - - - ')
+                    print(f'{roll_value} has been added to your points')
+                    print('- - - - - - - - - - - - - - - - - - ')
+                    return roll_value
+                elif roll_value == 0:
+                    print('- - - - - - - - - - - - - - - - - - ')
+                    print('Turn Skipped')
+                    print('- - - - - - - - - - - - - - - - - - ')
+                    return 0
+            else:
+                print("please type either 'roll' or 'r' to role and 'hold' or 'h' to hold and continue with current point")
+            roll_count += 1
+            if roll_count == self.roll_limit:
+                return roll_value or 0
+
+    def check_win(self, point_to_check: int) -> bool:
+        if point_to_check >= self.goal:
+            return True
+        else:
+            return False
+
+    def game(self) -> str:
+        players_score = self.score
+        player_count = self.player_count()
+        apt = 1 # active_players_turn
+        for i in range(player_count):
+            self.score[f'player{i+1}'] = 0
+        print('- - - - - - - - - - - - - - - - - - ')
+        print(f'First to get to {self.goal}')
+        for i, v in enumerate(players_score.values()):
+            print(f'player-{i+1}: {v}')
+        print('- - - - - - - - - - - - - - - - - - ')
+
+        while True:
+            if apt > player_count:
+                apt = 1 
+            print(f"Player-{apt}'s Turn")
+            setup = self.roll_setup()
+            #for i in range(len(players_score)):
+            
+            if isinstance(setup, list):
+                players_score[f'player{apt}'] -= self.withdraw
+            else:
+                players_score[f'player{apt}'] += setup
+            indiv_score = players_score[f'player{apt}'] #Individual Score
+            if self.check_win(point_to_check=indiv_score) is True:
+                print('- - - - - - - - - - - - - - - - - - ')
+                print('Current Score:') 
+                for i, v in enumerate(players_score.values()):
+                    print(f'player-{i+1}: {v}')
+                print('|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|')
+                print(f'player-{apt} has just won. Congratulations.')
+                print('|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|')
+                print('- - - - - - - - - - - - - - - - - - ')
+                break
+
+            print('- - - - - - - - - - - - - - - - - - ')
+            print('Current Score:') 
+            time.sleep(0.5)
+            for i, v in enumerate(players_score.values()):
+                print(f'player-{i+1}: {v}')
+            print('- - - - - - - - - - - - - - - - - - ')
+            apt += 1
+                    
+
+    def main(self) -> None:
+        while True:
+            #run1 = self.player_count()
+            self.game()
+            print('\nDo you want to play again?')
+            self.retry = input('Yes - 1 | No - 2 :- ')
+            if self.retry == '1' or self.retry == 'y':
+                self.score = {}
+                continue
+            elif self.retry == '2' or self.retry == 'n':
+                print('Game Ended')
+                break
+            else:
+                break
+
+
+if __name__ == '__main__':
+    f = pyfiglet.Figlet(font='merlin1', width=150)
+    print(f.renderText("Rave's Python Pig Game"))
+    run = pig_game()
+    run.main()
