@@ -2,24 +2,49 @@ import random
 import time
 import pyfiglet
 
+VARIABLES = {
+    "roll_limit": 4, # How many times a player can roll consecutively with holding
+    'withdrawal-point': 5, # How much points to deduct from a player's score if they roll '1'
+    'default_goal': 100,
+    'goal': None,
+    'max_players': 5,
+    '1-point-word': 'unlocky'
+}
+
 class pig_game:
     def __init__(self):
-        self.goal = int(input("Enter Goal: "))
-        self.roll_limit = 4
-        self.withdraw = 5
+        self.get_goal()
+        self.roll_limit = VARIABLES['roll_limit']
+        self.withdraw = VARIABLES['withdrawal-point']
         self.score = {}
-        self.players = None
         self.choice = None
         self.retry = None
+
+    def get_goal(self):
+        while True:
+            print('- - - - - - - - - - - - - - - - - - ')
+
+            goal_input = input("Enter Goal (d -> default): ")
+            goal_input = goal_input.lower().strip()
+
+            if goal_input == 'd' or goal_input == 'default':
+                VARIABLES['goal'] = VARIABLES['default_goal']
+                break
+            elif goal_input.isdigit() and (int(goal_input) < 1 or int(goal_input) > 1000):
+                VARIABLES['goal'] = int(goal_input)
+                break
+            else:
+                print('Invalid Goal...')
+                continue
+        return
 
     def player_count(self) -> int:
         while True:
             print('- - - - - - - - - - - - - - - - - - ')
-            self.players = input("Enter the number of players (2-4): ")
-            players = self.players
+            players = input("Enter the number of players (2-4): ")
             if players.isdigit():
                 players = int(players)
-                if not 2 <= players <= 4:
+                if players < 2 and players > VARIABLES['max_players']:
                     print('There can only be 2 to 4 players')
                 else:
                     break
@@ -51,13 +76,13 @@ class pig_game:
                 if not roll_result:
                     if roll_value >= 1:
                         print('- - - - - - - - - - - - - - - - - - ')
-                        print(f"Unlucky... You got a 1. You've lost all ({roll_value}) points you got this round")
+                        print(f"{VARIABLES['1-point-word']}... You got a 1. You've lost all ({roll_value}) points you got this round")
                         print(f'{self.withdraw} Points has also been removed from your total point')
                         return [0]
                     else:
                         print('- - - - - - - - - - - - - - - - - - ')
+                        print('{VARIABLES['1-point-word']}... You got a 1. Therefore you dont get any point this round')
                         print(f'{self.withdraw} Points has also been removed from your total point')
-                        print('Unlucky... You got a 1. Therefore you dont get any point this round')
                         return [0]
                 #roll_count += 1
                 roll_value += roll_result
@@ -92,19 +117,21 @@ class pig_game:
                 return roll_value or 0
 
     def check_win(self, point_to_check: int) -> bool:
-        if point_to_check >= self.goal:
+        goal = VARIABLES['goal']
+        if point_to_check >= goal:
             return True
         else:
             return False
 
     def game(self) -> str:
+        goal = VARIABLES['goal']
         players_score = self.score
         player_count = self.player_count()
         apt = 1 # active_players_turn
         for i in range(player_count):
             self.score[f'player{i+1}'] = 0
         print('- - - - - - - - - - - - - - - - - - ')
-        print(f'First to get to {self.goal}')
+        print(f'First to get to {goal}')
         for i, v in enumerate(players_score.values()):
             print(f'player-{i+1}: {v}')
         print('- - - - - - - - - - - - - - - - - - ')
@@ -123,6 +150,7 @@ class pig_game:
             indiv_score = players_score[f'player{apt}'] #Individual Score
             if self.check_win(point_to_check=indiv_score) is True:
                 print('- - - - - - - - - - - - - - - - - - ')
+                print(f'Overall Goal: {goal}') 
                 print('Current Score:') 
                 for i, v in enumerate(players_score.values()):
                     print(f'player-{i+1}: {v}')
@@ -133,6 +161,7 @@ class pig_game:
                 break
 
             print('- - - - - - - - - - - - - - - - - - ')
+            print(f'Overall Goal: {self.goal}') 
             print('Current Score:') 
             time.sleep(0.5)
             for i, v in enumerate(players_score.values()):
