@@ -2,20 +2,27 @@ import random
 import time
 import pyfiglet
 
-VARIABLES = {
+CONFIG = {
     "roll_limit": 4, # How many times a player can roll consecutively with holding
+    
+    "max_dice": 6, # Maximum number any player can roll
+
     'withdrawal-point': 5, # How much points to deduct from a player's score if they roll '1'
-    'default_goal': 100,
-    'goal': None,
-    'max_players': 5,
-    '1-point-word': 'unlocky'
+
+    'default_goal': 100, # Target score if player selects default goal
+
+    'goal': None, # Set by get_goal(); used by check_win() to manage the game's target score
+
+    'max_players': 5, # Maximum number of players allowed by the code
+
+    '1-point-word': 'unlocky' # Message displayed when a player rolls a 1
 }
 
-class pig_game:
+class PigGame:
     def __init__(self):
         self.get_goal()
-        self.roll_limit = VARIABLES['roll_limit']
-        self.withdraw = VARIABLES['withdrawal-point']
+        self.roll_limit = CONFIG['roll_limit']
+        self.withdraw = CONFIG['withdrawal-point']
         self.score = {}
         self.choice = None
         self.retry = None
@@ -28,10 +35,10 @@ class pig_game:
             goal_input = goal_input.lower().strip()
 
             if goal_input == 'd' or goal_input == 'default':
-                VARIABLES['goal'] = VARIABLES['default_goal']
+                CONFIG['goal'] = CONFIG['default_goal']
                 break
-            elif goal_input.isdigit() and (int(goal_input) < 1 or int(goal_input) > 1000):
-                VARIABLES['goal'] = int(goal_input)
+            elif goal_input.isdigit() and (2 <= int(goal_input) < 1000):
+                CONFIG['goal'] = int(goal_input)
                 break
             else:
                 print('Invalid Goal...')
@@ -41,47 +48,45 @@ class pig_game:
     def player_count(self) -> int:
         while True:
             print('- - - - - - - - - - - - - - - - - - ')
-            players = input("Enter the number of players (2-4): ")
+            players = input(f"Enter the number of players (2-{CONFIG['max_players']}): ")
             if players.isdigit():
                 players = int(players)
-                if players < 2 and players > VARIABLES['max_players']:
-                    print('There can only be 2 to 4 players')
+                if players < 2 or players > CONFIG['max_players']:
+                    print(f'There can only be 2 to {CONFIG['max_players']} players')
                 else:
                     break
             else:
-                print('Please enter a digit between 2 and 4 which is the valid players required')
+                print(f'Please enter a digit between 2 and {CONFIG['max_players']} which is the valid players required')
         return int(players)
 
-    def roll(self) -> int:
-        # min_value = 1
-        # max_value = 6
-        # roll = random.randint(min_value, max_value)
-        roll = random.randrange(6) + 1
+    def roll(self) -> int | bool:
+        roll = random.randint(1, CONFIG['max_dice'])
 
         if roll == 1:
             return False
         return roll
 
 
-    def roll_setup(self) -> int:
+    def roll_setup(self) -> list | int:
         roll_value = 0
         roll_count = 0
+
         while True:
-            roll_result = self.roll()
-            #if roll_count < 1: 
+            roll_result = 0
             print('- - - - - - - - - - - - - - - - - - ')
             self.choice = input("Roll or Hold (r or h) - ")
             time.sleep(1)
             if self.choice.lower() == 'roll' or self.choice.lower() == 'r':
+                roll_result = self.roll()
                 if not roll_result:
                     if roll_value >= 1:
                         print('- - - - - - - - - - - - - - - - - - ')
-                        print(f"{VARIABLES['1-point-word']}... You got a 1. You've lost all ({roll_value}) points you got this round")
+                        print(f"{CONFIG['1-point-word']}... You got a 1. You've lost all ({roll_value}) points you got this round")
                         print(f'{self.withdraw} Points has also been removed from your total point')
                         return [0]
                     else:
                         print('- - - - - - - - - - - - - - - - - - ')
-                        print('{VARIABLES['1-point-word']}... You got a 1. Therefore you dont get any point this round')
+                        print(f"{CONFIG['1-point-word']}... You got a 1. Therefore you dont get any point this round")
                         print(f'{self.withdraw} Points has also been removed from your total point')
                         return [0]
                 #roll_count += 1
@@ -117,14 +122,14 @@ class pig_game:
                 return roll_value or 0
 
     def check_win(self, point_to_check: int) -> bool:
-        goal = VARIABLES['goal']
+        goal = CONFIG['goal']
         if point_to_check >= goal:
             return True
         else:
             return False
 
-    def game(self) -> str:
-        goal = VARIABLES['goal']
+    def game(self) -> None:
+        goal = CONFIG['goal']
         players_score = self.score
         player_count = self.player_count()
         apt = 1 # active_players_turn
@@ -161,7 +166,7 @@ class pig_game:
                 break
 
             print('- - - - - - - - - - - - - - - - - - ')
-            print(f'Overall Goal: {self.goal}') 
+            print(f'Overall Goal: {goal}') 
             print('Current Score:') 
             time.sleep(0.5)
             for i, v in enumerate(players_score.values()):
@@ -170,24 +175,23 @@ class pig_game:
             apt += 1
                     
 
-    def main(self) -> None:
-        while True:
-            #run1 = self.player_count()
-            self.game()
-            print('\nDo you want to play again?')
-            self.retry = input('Yes - 1 | No - 2 :- ')
-            if self.retry == '1' or self.retry == 'y':
-                self.score = {}
-                continue
-            elif self.retry == '2' or self.retry == 'n':
-                print('Game Ended')
-                break
-            else:
-                break
+def retry():
+    print('\nDo you want to play again?')
+    retry = input('Yes - 1 | No - 2 :- ')
+    retry = retry.strip().lower()
+    if retry == '1' or (retry == 'y' or retry == 'yes'):
+        return True
+    else:
+        return False
+
 
 
 if __name__ == '__main__':
     f = pyfiglet.Figlet(font='merlin1', width=150)
     print(f.renderText("Rave's Python Pig Game"))
-    run = pig_game()
-    run.main()
+    while True:
+        run = PigGame().game()
+        if retry() == True:
+            continue
+        else:
+            break
