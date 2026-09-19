@@ -52,11 +52,11 @@ class PigGame:
             if players.isdigit():
                 players = int(players)
                 if players < 2 or players > CONFIG['max_players']:
-                    print(f'There can only be 2 to {CONFIG['max_players']} players')
+                    print(f"There can only be 2 to {CONFIG['max_players']} players")
                 else:
                     break
             else:
-                print(f'Please enter a digit between 2 and {CONFIG['max_players']} which is the valid players required')
+                print(f"Please enter a digit between 2 and {CONFIG['max_players']} which is the valid players required")
         return int(players)
 
     def roll(self) -> int | bool:
